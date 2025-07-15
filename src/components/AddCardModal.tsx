@@ -26,9 +26,10 @@ export function AddCardModal({ columnId }: { columnId: string }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="mt-4 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 px-[12px] py-[5px] w-fit rounded-[8px] border-none"
+        className="mt-4 flex items-center gap-1 text-sm border border-[#fff] bg-transparent text-[#fff] cursor-pointer px-[12px] py-[5px] w-fit rounded-[8px] border-none"
       >
-        <Plus className="h-4 w-4" /> Add Card
+        <Plus className="h-4 w-4" />
+        {/* Add Card */}
       </button>
       <Dialog
         open={open}

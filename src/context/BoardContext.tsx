@@ -16,6 +16,7 @@ export type ColumnType = { id: string; title: string; cards: CardType[] };
 export type BoardState = ColumnType[];
 
 interface Ctx {
+  clientCount: number;
   board: BoardState;
   addColumn: (title: string) => void;
   addCard: (columnId: string, card: Omit<CardType, "id">) => void;
@@ -38,9 +39,7 @@ const BoardContext = createContext<Ctx | undefined>(undefined);
 export function BoardProvider({ children }: { children: React.ReactNode }) {
   const socket = useSocket("ws://localhost:4000");
 
-  const [board, setBoard] = useState<BoardState>([
-    { id: uuid(), title: "To Do", cards: [] },
-  ]);
+  const [board, setBoard] = useState<BoardState>([]);
   const [connected, setConnected] = useState(0);
 
   console.log(connected);
@@ -191,6 +190,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value: Ctx = {
+    clientCount: connected,
     board,
     addColumn,
     addCard,

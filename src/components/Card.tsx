@@ -21,6 +21,7 @@ export function Card({
   index: number;
 }) {
   const [open, setOpen] = useState(false);
+  const handleClose = () => setOpen(false);
   return (
     <Draggable draggableId={card.id} index={index}>
       {(provided) => (
@@ -29,20 +30,22 @@ export function Card({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={() => setOpen(true)}
-          className="cursor-pointer bg-white hover:bg-white/80 dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded-xl p-[12px] shadow max-w-[300px]"
+          className="cursor-pointer bg-[#fff] hover:bg-[#ffffff80] dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded-xl p-[12px] max-w-[300px] shadow shadow-[#2f2f2f33]"
         >
-          <div className="flex justify-between">
-            <p className="font-medium text-lg mb-1 ">{card.title}</p>
-            <Edit size={16} onClick={() => setOpen(true)} />
+          <div className="flex justify-between items-center shadow">
+            <p className="font-medium text-lg mb-1 text-[#2f2f2f]">
+              {card.title}
+            </p>
+            <Edit size={16} onClick={() => setOpen(true)} color="#2f2f2f" />
           </div>
-          <p className="text-xs text-gray-500 line-clamp-2">
+          <p className="text-xs text-[#2f2f2f80] line-clamp-2">
             {card.description}
           </p>
           <CardEditor
             card={card}
             columnId={columnId}
             open={open}
-            onClose={() => setOpen(false)}
+            onClose={handleClose}
           />
         </div>
       )}
@@ -67,14 +70,21 @@ export function CardEditor({
 
   const handleSave = () => {
     updateCard(columnId, card.id, { title, description });
-    onClose?.();
+    onClose();
   };
 
   return (
     <>
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
         <DialogTitle>Edit Card</DialogTitle>
-        <DialogContent className="space-y-4 pt-4">
+        <DialogContent
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+            paddingTop: "10px",
+          }}
+        >
           <TextField
             fullWidth
             label="Title"
@@ -91,7 +101,7 @@ export function CardEditor({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => onClose?.()}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
           <Button variant="contained" onClick={handleSave}>
             Save
           </Button>

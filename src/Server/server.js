@@ -49,7 +49,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { promises as fs } from "fs";
 import path from "path";
-import { randomUUID } from "crypto";
 
 const DATA_FILE = path.resolve("board.json");
 
@@ -86,7 +85,7 @@ async function saveBoard() {
 const mutateBoard = (fn) => {
   board = fn(board);
   console.log("board", board);
-  io.emit("board:update", board, clientCount);
+  io.emit("board:update", { board, clientCount });
   saveBoard();
 };
 
@@ -94,12 +93,12 @@ io.on("connection", (socket) => {
   clientCount++;
   io.emit("client:count", clientCount);
   console.log(`Client connected (${clientCount} online)`);
-  socket.emit("board:update", board, clientCount); // full state on join
+  socket.emit("board:update", { board, clientCount }); // full state on join
 
   socket.on("disconnect", () => {
     clientCount--;
     io.emit("client:count", clientCount);
-    socket.emit("board:update", board, clientCount);
+    socket.emit("board:update", { board, clientCount });
     console.log(`Client disconnected (${clientCount} online)`);
   });
 

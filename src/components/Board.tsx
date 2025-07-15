@@ -30,7 +30,10 @@ export function Board() {
   };
 
   return (
-    <div className=" bg-gradient-to-r from-[#FF0000] via-[#FFBB00] to-[#12A1FF] flex flex-col gap-[10px]">
+    <div
+      className=" bg-gradient-to-r from-[#FF0000] via-[#FFBB00] to-[#12A1FF] flex flex-col gap-[10px] border-box"
+      style={{ height: "100vh" }}
+    >
       <div className="p-[8px] rounded-[12px]">
         <Navbar />
       </div>
@@ -40,7 +43,7 @@ export function Board() {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex gap-[20px] p-[24px] h-dvh box-border overflow-x-auto overflow-y-hidden"
+              className="flex gap-[20px] p-[24px] h-dvh box-border overflow-x-auto overflow-y-hidden h-full"
             >
               {board?.length > 0 ? (
                 board.map((col, index) => (
