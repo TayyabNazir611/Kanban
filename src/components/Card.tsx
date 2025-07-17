@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { type CardType, useBoard } from "../context/BoardContext";
 import { Draggable } from "@hello-pangea/dnd";
-import { Edit } from "lucide-react";
+import { Clock, Edit, Trash } from "lucide-react";
 
 export function Card({
   columnId,
@@ -20,34 +20,50 @@ export function Card({
   card: CardType;
   index: number;
 }) {
+  const { deleteCard } = useBoard();
   const [open, setOpen] = useState(false);
   const handleClose = () => setOpen(false);
   return (
     <Draggable draggableId={card.id} index={index}>
       {(provided) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          onClick={() => setOpen(true)}
-          className="cursor-pointer bg-[#fff] hover:bg-[#ffffff80] dark:bg-neutral-700 dark:hover:bg-neutral-600 rounded-xl p-[12px] max-w-[300px] shadow shadow-[#2f2f2f33]"
-        >
-          <div className="flex justify-between items-center shadow">
-            <p className="font-medium text-lg mb-1 text-[#2f2f2f]">
-              {card.title}
+        <>
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            onClick={() => setOpen(true)}
+            className="cursor-pointer bg-[#fff] hover:bg-[#ffffff80] p-[12px] max-w-[300px] rounded-[16px] border-b-2 border-b-[#718089]"
+          >
+            <div className="flex justify-between items-center shadow">
+              <p className="font-medium text-lg mb-1 text-[#2f2f2f]">
+                {card.title}
+              </p>
+              <div className="flex gap-[4px]">
+                <Edit size={16} onClick={() => setOpen(true)} color="#2f2f2f" />
+                <Trash
+                  size={16}
+                  onClick={() => deleteCard(columnId, card?.id)}
+                  color="#FF0000"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-[#2f2f2f80] line-clamp-2">
+              {card.description}
             </p>
-            <Edit size={16} onClick={() => setOpen(true)} color="#2f2f2f" />
+            <div className="w-full p-[5px] text-[#718098] text-[12px] items-center flex gap-[4px]">
+              <Clock size={12} />
+              <p>{new Date(card?.createdAt)?.toDateString()}</p>
+            </div>
           </div>
-          <p className="text-xs text-[#2f2f2f80] line-clamp-2">
-            {card.description}
-          </p>
-          <CardEditor
-            card={card}
-            columnId={columnId}
-            open={open}
-            onClose={handleClose}
-          />
-        </div>
+          {open && (
+            <CardEditor
+              card={card}
+              columnId={columnId}
+              open={open}
+              onClose={handleClose}
+            />
+          )}
+        </>
       )}
     </Draggable>
   );
@@ -75,8 +91,18 @@ export function CardEditor({
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-        <DialogTitle>Edit Card</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: { borderRadius: "22px", maxWidth: 400 },
+        }}
+      >
+        <DialogTitle className="font-bold text-[22px] text-[#2f2f2f]">
+          Edit Card
+        </DialogTitle>
         <DialogContent
           style={{
             display: "flex",
@@ -90,6 +116,12 @@ export function CardEditor({
             label="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                border: "1px solid #2f2f2f",
+                borderRadius: 4,
+              },
+            }}
           />
           <TextField
             fullWidth
@@ -98,11 +130,30 @@ export function CardEditor({
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                border: "1px solid #2f2f2f",
+                borderRadius: 4,
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>
+        <DialogActions sx={{ paddingInline: "24px", paddingBlock: "12px" }}>
+          <Button
+            onClick={onClose}
+            sx={{
+              borderRadius: "50px",
+              border: "1px solid #2f2f2f",
+              color: "#2f2f2f",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            sx={{ borderRadius: "50px", background: "#1488CC" }}
+          >
             Save
           </Button>
         </DialogActions>

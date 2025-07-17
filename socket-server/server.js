@@ -50,7 +50,7 @@ import { Server } from "socket.io";
 import { promises as fs } from "fs";
 import path from "path";
 
-const DATA_FILE = path.resolve("board.json");
+const DATA_FILE = path.resolve("../board.json");
 
 const http = createServer();
 const io = new Server(http, { cors: { origin: "*" } });
@@ -61,6 +61,7 @@ let clientCount = 0;
 async function loadBoard() {
   try {
     const json = await fs.readFile(DATA_FILE, { encoding: "utf8" });
+    console.log(json, "file data");
     board = JSON.parse(json);
     console.log("Board loaded from file");
   } catch (err) {
@@ -83,13 +84,19 @@ async function saveBoard() {
 }
 
 const mutateBoard = (fn) => {
-  board = fn(board);
-  console.log("board", board);
-  io.emit("board:update", { board, clientCount });
-  saveBoard();
+  try {
+    board = fn(board);
+    console.log("board", board);
+    io.emit("board:update", { board, clientCount });
+    saveBoard();
+  } catch (err) {
+    console.error("mutateBoard error:", err);
+  }
 };
 
 io.on("connection", (socket) => {
+  console.log("=== SERVER STARTED ===");
+
   clientCount++;
   io.emit("client:count", clientCount);
   console.log(`Client connected (${clientCount} online)`);
@@ -123,28 +130,51 @@ io.on("connection", (socket) => {
 
   /* ---------- cards ---------- */
   socket.on("card:add", ({ columnId, card }) => {
+    const newCard = {
+      ...card,
+      createdAt: new Date().toISOString(),
+    };
     mutateBoard((b) =>
       b.map((c) =>
-        c.id === columnId ? { ...c, cards: [...c.cards, card] } : c
+        c.id === columnId ? { ...c, cards: [...c.cards, newCard] } : c
       )
     );
     // socket.broadcast.emit("card:add", { columnId, card });
   });
 
   socket.on("card:update", ({ columnId, cardId, changes }) => {
+    const newChanges = {
+      ...changes,
+      createdAt: new Date().toISOString(),
+    };
     mutateBoard((b) =>
       b.map((c) =>
         c.id === columnId
           ? {
               ...c,
               cards: c.cards.map((card) =>
-                card.id === cardId ? { ...card, ...changes } : card
+                card.id === cardId ? { ...card, ...newChanges } : card
               ),
             }
           : c
       )
     );
     // socket.broadcast.emit("card:update", { columnId, cardId, changes });
+  });
+
+  socket.on("card:delete", ({ columnId, cardId }) => {
+    mutateBoard((b) =>
+      b.map((col) =>
+        col.id === columnId
+          ? {
+              ...col,
+              cards: col.cards.filter((card) => card.id !== cardId),
+            }
+          : col
+      )
+    );
+
+    io.emit("card:delete", { columnId, cardId });
   });
 
   socket.on("card:move", ({ sourceCol, destCol, sourceIdx, destIdx }) => {
@@ -165,5 +195,6 @@ io.on("connection", (socket) => {
   });
 });
 
-await loadBoard();
-http.listen(4000, () => console.log("Socket.IO on 4000"));
+loadBoard().then(() => {
+  http.listen(4000, () => console.log("Socket.IO on 4000"));
+});

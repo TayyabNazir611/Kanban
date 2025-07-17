@@ -16,15 +16,15 @@ export function Column({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className="w-72 bg-[#ffffff90] backdrop-blur-[5px] dark:bg-neutral-800 rounded-2xl shadow p-4 flex flex-col min-w-[310px] p-[10px] gap-[12px] rounded-[12px]"
+          className="w-72 bg-[#f5f3f4AF] backdrop-blur-[5px] dark:bg-neutral-800 shadow flex flex-col min-w-[310px] p-[16px] gap-[12px] rounded-[20px] min-h-[150px] h-fit"
         >
-          <div className="flex justify-between items-center bg-gradient-to-r from-[#cc2b5e] to-[#753a88] rounded-[12px] shadow-[8px] p-[8px]">
-            <h2
+          <div className="flex justify-between items-center  rounded-[12px] shadow-[8px] py-[8px]">
+            <p
               {...provided.dragHandleProps}
-              className="font-semibold text-lg mb-4 text-[#fff]"
+              className="font-bold text-[20px] mb-4 text-[#2f2f2f] "
             >
               {column.title}
-            </h2>
+            </p>
             <AddCardModal columnId={column.id} />
           </div>
 

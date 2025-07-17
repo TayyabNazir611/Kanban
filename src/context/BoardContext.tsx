@@ -11,7 +11,12 @@ import React, {
 import { v4 as uuid } from "uuid";
 import { useSocket } from "../hooks/useSocket";
 
-export type CardType = { id: string; title: string; description: string };
+export type CardType = {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: Date;
+};
 export type ColumnType = { id: string; title: string; cards: CardType[] };
 export type BoardState = ColumnType[];
 
@@ -32,6 +37,7 @@ interface Ctx {
     destIdx: number
   ) => void;
   moveColumn: (sourceIdx: number, destIdx: number) => void;
+  deleteCard: (columnId: string, cardId: string) => void;
 }
 
 const BoardContext = createContext<Ctx | undefined>(undefined);
@@ -46,10 +52,16 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
   // ---------------- socket listeners ----------------
   useEffect(() => {
     if (!socket) return;
-    const onSnapshot = (data: BoardState, online: number) => {
-      console.log("[Board] Received board:update", data, online);
-      setBoard(data);
-      setConnected(online);
+    const onSnapshot = ({
+      board,
+      clientCount,
+    }: {
+      board: BoardState;
+      clientCount: number;
+    }) => {
+      console.log("[Board] Received board:update", board, clientCount);
+      setBoard(board);
+      setConnected(clientCount);
     };
     const onColAdd = (col: ColumnType) => setBoard((prev) => [...prev, col]);
     const onCardAdd = ({
@@ -77,6 +89,18 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
             : col
         )
       );
+    const onCardDelete = ({ columnId, cardId }: any) =>
+      setBoard((prev) =>
+        prev.map((col) =>
+          col.id === columnId
+            ? {
+                ...col,
+                cards: col.cards.filter((card) => card.id !== cardId),
+              }
+            : col
+        )
+      );
+
     const onMoveCard = (payload: any) => {
       const { sourceCol, destCol, sourceIdx, destIdx } = payload;
       setBoard((prev) => {
@@ -101,6 +125,8 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     socket.on("column:add", onColAdd);
     socket.on("card:add", onCardAdd);
     socket.on("card:update", onCardUpdate);
+    socket.on("card:delete", onCardDelete);
+
     socket.on("card:move", onMoveCard);
     socket.on("column:move", onMoveColumn);
     return () => {
@@ -109,6 +135,8 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       socket.off("column:add", onColAdd);
       socket.off("card:add", onCardAdd);
       socket.off("card:update", onCardUpdate);
+      socket.off("card:delete", onCardDelete);
+
       socket.off("card:move", onMoveCard);
       socket.off("column:move", onMoveColumn);
     };
@@ -156,6 +184,23 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     [socket]
   );
 
+  const deleteCard = useCallback(
+    (columnId: string, cardId: string) => {
+      setBoard((prev) =>
+        prev.map((col) =>
+          col.id === columnId
+            ? {
+                ...col,
+                cards: col.cards.filter((card) => card.id !== cardId),
+              }
+            : col
+        )
+      );
+      socket?.emit("card:delete", { columnId, cardId });
+    },
+    [socket]
+  );
+
   const moveCard = useCallback(
     (
       sourceCol: string,
@@ -195,6 +240,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     addColumn,
     addCard,
     updateCard,
+    deleteCard,
     moveCard,
     moveColumn,
   };

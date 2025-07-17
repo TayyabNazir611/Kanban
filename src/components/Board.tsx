@@ -31,10 +31,10 @@ export function Board() {
 
   return (
     <div
-      className=" bg-gradient-to-r from-[#FF0000] via-[#FFBB00] to-[#12A1FF] flex flex-col gap-[10px] border-box"
+      className=" bg-gradient-to-r from-[#1488CC] to-[#2B32B2] flex flex-col border-box"
       style={{ height: "100vh" }}
     >
-      <div className="p-[8px] rounded-[12px]">
+      <div className="rounded-[12px]">
         <Navbar />
       </div>
       <DragDropContext onDragEnd={onDragEnd}>
