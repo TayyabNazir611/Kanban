@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,11 +6,10 @@ import {
   TextField,
   DialogActions,
   Button,
-  Alert,
-  AlertTitle,
 } from "@mui/material";
 import { CircleAlert, Plus } from "lucide-react";
 import { useBoard } from "../context/BoardContext";
+import ServerOffline from "./ServerOffline";
 
 export function AddCardModal({ columnId }: { columnId: string }) {
   const { addCard, status } = useBoard();
@@ -36,38 +35,13 @@ export function AddCardModal({ columnId }: { columnId: string }) {
             setOpen(true);
           }
         }}
-        className="mt-4 flex items-center gap-1 text-sm bg-transparent text-[#2f2f2f] cursor-pointer px-[12px] py-[5px] w-fit rounded-[8px] border-none"
+        className="mt-4 flex items-center gap-1 text-sm bg-transparent text-[#2f2f2f] cursor-pointer px-[5px] py-[5px] w-fit rounded-[8px] border-none"
       >
         <Plus className="h-4 w-4" />
         {/* Add Card */}
       </button>
       {offline ? (
-        <Dialog
-          open={open}
-          onClose={() => setOpen(false)}
-          PaperProps={{
-            sx: {
-              borderRadius: "12px",
-              maxWidth: 400,
-              background: "#ffee8cc8",
-            },
-          }}
-          sx={{ backdropFilter: "blur(1px)" }}
-        >
-          <DialogTitle
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              gap: "8px",
-              color: "#fff",
-            }}
-          >
-            <CircleAlert color="#FFEE8C" size={50} /> Server is currently
-            offline
-          </DialogTitle>
-        </Dialog>
+        <ServerOffline open={open} setOpen={setOpen} />
       ) : (
         <Dialog
           open={open}

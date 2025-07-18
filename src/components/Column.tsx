@@ -2,6 +2,7 @@ import { type ColumnType } from "../context/BoardContext";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card } from "./Card";
 import { AddCardModal } from "./AddCardModal";
+import { Ellipsis } from "lucide-react";
 
 export function Column({
   column,
@@ -16,16 +17,19 @@ export function Column({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className="w-72 bg-[#f5f3f4AF] backdrop-blur-[5px] dark:bg-neutral-800 shadow flex flex-col min-w-[310px] p-[16px] gap-[12px] rounded-[20px] min-h-[150px] h-fit"
+          className="w-72 bg-[#f2f2f5] backdrop-blur-[5px] dark:bg-neutral-800 shadow flex flex-col min-w-[310px] p-[16px] gap-[12px] rounded-[20px] min-h-[150px] h-fit"
         >
           <div className="flex justify-between items-center  rounded-[12px] shadow-[8px] py-[8px]">
             <p
               {...provided.dragHandleProps}
-              className="font-bold text-[20px] mb-4 text-[#2f2f2f] "
+              className="font-[700] text-[20px] mb-4 text-[#2C3E50] capitalize "
             >
               {column.title}
             </p>
-            <AddCardModal columnId={column.id} />
+            <div className="flex gap-[2px] items-center">
+              <AddCardModal columnId={column.id} />
+              <Ellipsis color="#2f2f2f" />
+            </div>
           </div>
 
           <Droppable droppableId={column.id} type="CARD">

@@ -32,10 +32,10 @@ export function Card({
             {...provided.draggableProps}
             {...provided.dragHandleProps}
             onClick={() => setOpen(true)}
-            className="cursor-pointer bg-[#fff] hover:bg-[#ffffff80] p-[12px] max-w-[300px] rounded-[16px] border-b-2 border-b-[#718089]"
+            className="cursor-pointer bg-[#fff] hover:bg-[#ffffff80] p-[12px] max-w-[300px] rounded-[16px] border-b-2 border-b-[#D6D9DE] flex flex-col gap-[4px]"
           >
             <div className="flex justify-between items-center shadow">
-              <p className="font-medium text-lg mb-1 text-[#2f2f2f]">
+              <p className="font-[500] text-[18px] mb-1 text-[#0079BF] capitalize">
                 {card.title}
               </p>
               <div className="flex gap-[4px]">
@@ -47,10 +47,10 @@ export function Card({
                 />
               </div>
             </div>
-            <p className="text-xs text-[#2f2f2f80] line-clamp-2">
+            <p className="text-[14px] text-[#2f2f2f] line-clamp-4 wrap-anywhere">
               {card.description}
             </p>
-            <div className="w-full p-[5px] text-[#718098] text-[12px] items-center flex gap-[4px]">
+            <div className="w-full py-[5px] text-[#718098] text-[12px] items-center flex gap-[4px]">
               <Clock size={12} />
               <p>{new Date(card?.createdAt)?.toDateString()}</p>
             </div>

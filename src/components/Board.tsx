@@ -31,7 +31,7 @@ export function Board() {
 
   return (
     <div
-      className=" bg-gradient-to-r from-[#1488CC] to-[#2B32B2] flex flex-col border-box"
+      className=" bg-[#FFF] flex flex-col border-box"
       style={{ height: "100vh" }}
     >
       <div className="rounded-[12px]">
