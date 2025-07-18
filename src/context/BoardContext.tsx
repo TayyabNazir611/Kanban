@@ -21,6 +21,7 @@ export type ColumnType = { id: string; title: string; cards: CardType[] };
 export type BoardState = ColumnType[];
 
 interface Ctx {
+  status: string;
   clientCount: number;
   board: BoardState;
   addColumn: (title: string) => void;
@@ -47,6 +48,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
 
   const [board, setBoard] = useState<BoardState>([]);
   const [connected, setConnected] = useState(0);
+  const [status, setStatus] = useState("offline");
 
   console.log(connected);
   // ---------------- socket listeners ----------------
@@ -63,7 +65,13 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       setBoard(board);
       setConnected(clientCount);
     };
+
+    const onServer = (status: string) => {
+      setStatus(status); // "online"
+    };
+
     const onColAdd = (col: ColumnType) => setBoard((prev) => [...prev, col]);
+
     const onCardAdd = ({
       columnId,
       card,
@@ -76,6 +84,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
           c.id === columnId ? { ...c, cards: [...c.cards, card] } : c
         )
       );
+
     const onCardUpdate = ({ columnId, cardId, changes }: any) =>
       setBoard((prev) =>
         prev.map((col) =>
@@ -122,13 +131,18 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
 
     // socket.on("init", init);
     socket.on("board:update", onSnapshot);
+    socket.on("server:status", onServer);
     socket.on("column:add", onColAdd);
     socket.on("card:add", onCardAdd);
     socket.on("card:update", onCardUpdate);
     socket.on("card:delete", onCardDelete);
-
     socket.on("card:move", onMoveCard);
     socket.on("column:move", onMoveColumn);
+
+    socket.on("disconnect", () => {
+      setStatus("offline");
+    });
+
     return () => {
       // socket.off("init", init);
       socket.off("board:update", onSnapshot);
@@ -136,9 +150,11 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       socket.off("card:add", onCardAdd);
       socket.off("card:update", onCardUpdate);
       socket.off("card:delete", onCardDelete);
-
       socket.off("card:move", onMoveCard);
       socket.off("column:move", onMoveColumn);
+
+      socket.off("server:status");
+      socket.off("disconnect");
     };
   }, [socket]);
 
@@ -235,6 +251,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value: Ctx = {
+    status,
     clientCount: connected,
     board,
     addColumn,

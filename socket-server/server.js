@@ -97,6 +97,8 @@ const mutateBoard = (fn) => {
 io.on("connection", (socket) => {
   console.log("=== SERVER STARTED ===");
 
+  socket.emit("server:status", "online");
+
   clientCount++;
   io.emit("client:count", clientCount);
   console.log(`Client connected (${clientCount} online)`);

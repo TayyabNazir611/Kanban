@@ -33,19 +33,42 @@ export function AddColumnModal() {
         onClose={() => setOpen(false)}
         fullWidth
         maxWidth="xs"
+        PaperProps={{
+          sx: { borderRadius: "12px", maxWidth: 400 },
+        }}
+        sx={{ backdropFilter: "blur(10px)" }}
       >
         <DialogTitle>New Column</DialogTitle>
-        <DialogContent className="pt-4">
+        <DialogContent sx={{ paddingTop: 4 }}>
           <TextField
             fullWidth
             label="Column Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                border: "1px solid #2f2f2f",
+                borderRadius: 2,
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleAdd}>
+        <DialogActions sx={{ paddingInline: "24px", paddingBlock: "12px" }}>
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{
+              borderRadius: "8px",
+              border: "1px solid #2f2f2f",
+              color: "#2f2f2f",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAdd}
+            sx={{ borderRadius: "8px", background: "#1488CC" }}
+          >
             Add
           </Button>
         </DialogActions>

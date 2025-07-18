@@ -99,6 +99,7 @@ export function CardEditor({
         PaperProps={{
           sx: { borderRadius: "22px", maxWidth: 400 },
         }}
+        sx={{ backdropFilter: "blur(10px)" }}
       >
         <DialogTitle className="font-bold text-[22px] text-[#2f2f2f]">
           Edit Card
@@ -119,7 +120,7 @@ export function CardEditor({
             sx={{
               "& .MuiOutlinedInput-notchedOutline": {
                 border: "1px solid #2f2f2f",
-                borderRadius: 4,
+                borderRadius: 2,
               },
             }}
           />
@@ -133,7 +134,7 @@ export function CardEditor({
             sx={{
               "& .MuiOutlinedInput-notchedOutline": {
                 border: "1px solid #2f2f2f",
-                borderRadius: 4,
+                borderRadius: 2,
               },
             }}
           />
@@ -142,7 +143,7 @@ export function CardEditor({
           <Button
             onClick={onClose}
             sx={{
-              borderRadius: "50px",
+              borderRadius: "12px",
               border: "1px solid #2f2f2f",
               color: "#2f2f2f",
             }}
@@ -152,7 +153,7 @@ export function CardEditor({
           <Button
             variant="contained"
             onClick={handleSave}
-            sx={{ borderRadius: "50px", background: "#1488CC" }}
+            sx={{ borderRadius: "12px", background: "#1488CC" }}
           >
             Save
           </Button>
