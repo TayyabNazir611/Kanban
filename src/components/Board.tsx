@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useBoard } from "../context/BoardContext";
 import { Column } from "./Column";
 import Navbar from "./Navbar";
 import { CreateRoomModal } from "./RoomSelector";
 import {
-  Avatar,
+  
   Divider,
   MenuItem,
   Select,
@@ -12,13 +13,11 @@ import {
   Tabs,
   Tooltip,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  ArrowDownRightIcon,
   BarChart3,
   ChevronDown,
   Circle,
-  DoorOpen,
   LogOut,
   Settings,
   SquareDashedKanban,
@@ -35,7 +34,6 @@ export function Board() {
     availableRooms,
     joinRoom,
     status,
-    clientCount,
   } = useBoard();
   const [selectedRoom, setSelectedRoom] = useState("");
   const [tab, setTab] = useState(0);
@@ -46,7 +44,7 @@ export function Board() {
   const [open, setOpen] = useState(false);
   const handleClose = () => setOpen(false);
 
-  const handleChange = async (event) => {
+  const handleChange = async (event: any) => {
     const roomId = event.target.value;
     setSelectedRoom(roomId);
     const ok = await joinRoom(roomId);

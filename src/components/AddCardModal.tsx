@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -19,7 +19,11 @@ export function AddCardModal({ columnId }: { columnId: string }) {
   const [offline, setOffline] = useState(false);
   const handleAdd = () => {
     if (!title.trim()) return;
-    addCard(columnId, { title: title.trim(), description: description.trim() });
+    addCard(columnId, {
+      title: title.trim(),
+      description: description.trim(),
+      createdAt: new Date(),
+    });
     setTitle("");
     setDescription("");
     setOpen(false);
