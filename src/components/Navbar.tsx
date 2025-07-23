@@ -1,5 +1,4 @@
-import { SquareDashedKanbanIcon, Users2, Wifi, WifiOff } from "lucide-react";
-import { AddColumnModal } from "./AddColumnModal";
+import { SquareDashedKanbanIcon, Wifi, WifiOff } from "lucide-react";
 import { useBoard } from "../context/BoardContext";
 import { Tooltip } from "@mui/material";
 

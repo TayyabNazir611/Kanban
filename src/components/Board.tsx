@@ -4,15 +4,7 @@ import { useBoard } from "../context/BoardContext";
 import { Column } from "./Column";
 import Navbar from "./Navbar";
 import { CreateRoomModal } from "./RoomSelector";
-import {
-  
-  Divider,
-  MenuItem,
-  Select,
-  Tab,
-  Tabs,
-  Tooltip,
-} from "@mui/material";
+import { Divider, MenuItem, Select, Tab, Tabs, Tooltip } from "@mui/material";
 import { useState } from "react";
 import {
   BarChart3,
@@ -27,17 +19,12 @@ import { AddColumnModal } from "./AddColumnModal";
 // import { AddColumnModal } from "./AddColumnModal";
 
 export function Board() {
-  const {
-    board,
-    moveCard,
-    moveColumn,
-    availableRooms,
-    joinRoom,
-    status,
-  } = useBoard();
+  const { board, moveCard, moveColumn, availableRooms, joinRoom, status } =
+    useBoard();
   const [selectedRoom, setSelectedRoom] = useState("");
   const [tab, setTab] = useState(0);
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    console.log(event);
     setTab(newValue);
   };
 
