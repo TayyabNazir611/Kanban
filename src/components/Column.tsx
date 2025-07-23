@@ -17,7 +17,7 @@ export function Column({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className="w-72 bg-[#f2f2f5] backdrop-blur-[5px] dark:bg-neutral-800 shadow flex flex-col min-w-[310px] p-[16px] gap-[12px] rounded-[20px] min-h-[150px] h-fit"
+          className="w-72 bg-[#F4F5F7] border border-[#7180961A] backdrop-blur-[5px] dark:bg-neutral-800 shadow flex flex-col min-w-[310px] p-[16px] gap-[12px] rounded-[20px] min-h-[150px] h-fit"
         >
           <div className="flex justify-between items-center  rounded-[12px] shadow-[8px] py-[8px]">
             <p
@@ -37,7 +37,7 @@ export function Column({
               <div
                 ref={dropProvided.innerRef}
                 {...dropProvided.droppableProps}
-                className="flex-1 space-y-[12px] overflow-y-auto"
+                className="flex-1 space-y-[12px] overflow-y-auto h-full"
                 style={{ scrollbarWidth: "none" }}
               >
                 {column.cards.map((card, i) => (

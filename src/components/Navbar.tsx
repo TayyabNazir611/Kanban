@@ -1,35 +1,31 @@
-import {
-  SquareDashedKanbanIcon,
-  Users2,
-  Wifi,
-  WifiCog,
-  WifiOff,
-} from "lucide-react";
+import { SquareDashedKanbanIcon, Users2, Wifi, WifiOff } from "lucide-react";
 import { AddColumnModal } from "./AddColumnModal";
 import { useBoard } from "../context/BoardContext";
+import { Tooltip } from "@mui/material";
 
 const Navbar = () => {
-  const { clientCount, status } = useBoard();
+  const { status } = useBoard();
 
   console.log("status", status);
   //  bg-[#2f2f2f80]
   return (
-    <div className="flex justify-between py-[12px] backdrop-blur-[5px] rounded-[12px] px-[24px]">
+    <div className="flex justify-between py-[12px] backdrop-blur-[5px] rounded-[12px]">
       <p className="flex gap-px items-center text-[24px] m-[0px] capitalize font-[700] text-[#2f2f2f]">
-        <SquareDashedKanbanIcon /> Kanban: Your collaborative dashboard
+        <SquareDashedKanbanIcon color="#1488CC" />{" "}
+        <span className="text-[#1488CC]">Kanban</span>: Your collaborative
+        dashboard
       </p>
       <div className="flex gap-[8px] items-center">
-        <div className="bg-[#918f8f] rounded-full py-[10px] px-[16px] items-center flex gap-[10px] h-fit">
-          {status == "online" ? (
-            <Wifi color="lime" />
-          ) : (
-            <WifiOff color="grey" />
-          )}
-          <p className="flex items-center gap-[5px]">
-            <Users2 /> {clientCount || 1}
-          </p>
-        </div>
-        {status !== "offline" && <AddColumnModal />}
+        <Tooltip title={`Server ${status}`}>
+          <div className="border border-[#918f8f33] rounded-full py-[10px] px-[10px] items-center flex gap-[10px] h-fit">
+            {status == "online" ? (
+              <Wifi color="#07DD05" />
+            ) : (
+              <WifiOff color="grey" />
+            )}
+          </div>
+        </Tooltip>
+        {/* <AddColumnModal /> */}
       </div>
     </div>
   );

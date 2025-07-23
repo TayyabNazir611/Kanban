@@ -20,10 +20,17 @@ export type CardType = {
 export type ColumnType = { id: string; title: string; cards: CardType[] };
 export type BoardState = ColumnType[];
 
+interface Room {
+  id: string;
+  title: string;
+}
+
 interface Ctx {
   status: string;
   clientCount: number;
   board: BoardState;
+  availableRooms: Room[];
+
   addColumn: (title: string) => void;
   addCard: (columnId: string, card: Omit<CardType, "id">) => void;
   updateCard: (
@@ -39,6 +46,10 @@ interface Ctx {
   ) => void;
   moveColumn: (sourceIdx: number, destIdx: number) => void;
   deleteCard: (columnId: string, cardId: string) => void;
+
+  createRoom: (room: Room) => Promise<boolean>;
+  joinRoom: (roomId: string) => Promise<boolean>;
+  listRooms: () => void;
 }
 
 const BoardContext = createContext<Ctx | undefined>(undefined);
@@ -49,6 +60,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
   const [board, setBoard] = useState<BoardState>([]);
   const [connected, setConnected] = useState(0);
   const [status, setStatus] = useState("offline");
+  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
 
   console.log(connected);
   // ---------------- socket listeners ----------------
@@ -138,7 +150,9 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     socket.on("card:delete", onCardDelete);
     socket.on("card:move", onMoveCard);
     socket.on("column:move", onMoveColumn);
-
+    socket.on("room:list", (rooms: Room[]) => {
+      setAvailableRooms(rooms);
+    });
     socket.on("disconnect", () => {
       setStatus("offline");
     });
@@ -152,6 +166,7 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
       socket.off("card:delete", onCardDelete);
       socket.off("card:move", onMoveCard);
       socket.off("column:move", onMoveColumn);
+      socket.off("room:list");
 
       socket.off("server:status");
       socket.off("disconnect");
@@ -159,6 +174,44 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
   }, [socket]);
 
   // ---------------- helpers ----------------
+  const listRooms = useCallback(() => {
+    socket?.emit("room:list");
+  }, [socket]);
+
+  const createRoom = useCallback(
+    async ({ id, title }: Room): Promise<boolean> => {
+      return new Promise((resolve) => {
+        socket?.emit("room:create", { id, title }, (res: any) => {
+          if (res?.ok) {
+            listRooms();
+            resolve(true);
+          } else {
+            console.warn("Create room failed:", res?.error);
+            resolve(false);
+          }
+        });
+      });
+    },
+    [socket, listRooms]
+  );
+
+  const joinRoom = useCallback(
+    async (id: string): Promise<boolean> => {
+      return new Promise((resolve) => {
+        socket?.emit("room:join", { id }, (res: any) => {
+          if (res?.ok) {
+            console.log("Joined room:", id);
+            resolve(true);
+          } else {
+            console.warn("Join room failed:", res?.error);
+            resolve(false);
+          }
+        });
+      });
+    },
+    [socket]
+  );
+
   const addColumn = useCallback(
     (title: string) => {
       const newCol: ColumnType = { id: uuid(), title, cards: [] };
@@ -254,13 +307,19 @@ export function BoardProvider({ children }: { children: React.ReactNode }) {
     status,
     clientCount: connected,
     board,
+    availableRooms,
     addColumn,
     addCard,
     updateCard,
     deleteCard,
     moveCard,
     moveColumn,
+
+    createRoom,
+    joinRoom,
+    listRooms,
   };
+
   return (
     <BoardContext.Provider value={value}>{children}</BoardContext.Provider>
   );

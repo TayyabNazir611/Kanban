@@ -1,202 +1,155 @@
-// import { createServer } from "http";
-// import { Server } from "socket.io";
-// const http = createServer();
-// const io = new Server(http, { cors: { origin: "*" } });
-// let board = [];
-
-// io.on("connection", (socket) => {
-//   socket.emit("init", board);
-//   socket.on("column:add", (col) => {
-//     board.push(col);
-//     io.emit("column:add", col);
-//   });
-//   socket.on("card:add", ({ columnId, card }) => {
-//     board = board.map((c) =>
-//       c.id === columnId ? { ...c, cards: [...c.cards, card] } : c
-//     );
-//     io.emit("card:add", { columnId, card });
-//   });
-//   socket.on("card:update", ({ columnId, cardId, changes }) => {
-//     board = board.map((c) =>
-//       c.id === columnId
-//         ? {
-//             ...c,
-//             cards: c.cards.map((card) =>
-//               card.id === cardId ? { ...card, ...changes } : card
-//             ),
-//           }
-//         : c
-//     );
-//     io.emit("card:update", { columnId, cardId, changes });
-//   });
-//   socket.on("card:move", (payload) => {
-//     const { sourceCol, destCol, sourceIdx, destIdx } = payload;
-//     const sourceColumn = board.find((c) => c.id === sourceCol);
-//     const [moved] = sourceColumn.cards.splice(sourceIdx, 1);
-//     const destColumn = board.find((c) => c.id === destCol);
-//     destColumn.cards.splice(destIdx, 0, moved);
-//     io.emit("card:move", payload);
-//   });
-//   socket.on("column:move", ({ sourceIdx, destIdx }) => {
-//     const [moved] = board.splice(sourceIdx, 1);
-//     board.splice(destIdx, 0, moved);
-//     io.emit("column:move", { sourceIdx, destIdx });
-//   });
-// });
-// http.listen(4000, () => console.log("socket.io on 4000"));
-
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { promises as fs } from "fs";
 import path from "path";
 
-const DATA_FILE = path.resolve("../board.json");
-
 const http = createServer();
 const io = new Server(http, { cors: { origin: "*" } });
 
-let board = [];
-let clientCount = 0;
+const ROOMS_DIR = path.resolve("../boards");
 
-async function loadBoard() {
+async function loadBoard(roomId) {
   try {
-    const json = await fs.readFile(DATA_FILE, { encoding: "utf8" });
-    console.log(json, "file data");
-    board = JSON.parse(json);
-    console.log("Board loaded from file");
+    const data = await fs.readFile(
+      path.join(ROOMS_DIR, `${roomId}.json`),
+      "utf8"
+    );
+    return JSON.parse(data);
   } catch (err) {
-    if (err.code === "ENOENT") {
-      console.log("No existing board.json, starting empty");
-    } else {
-      console.error("Failed to load board:", err);
+    return []; // if not found, return empty board
+  }
+}
+
+async function saveBoard(roomId, board) {
+  const filePath = path.join(ROOMS_DIR, `${roomId}.json`);
+  const tempPath = filePath + ".tmp";
+  await fs.writeFile(tempPath, JSON.stringify(board, null, 2));
+  await fs.rename(tempPath, filePath);
+}
+
+let rooms = {}; // { roomId: { title: string, board: [] } }
+
+// Load existing room list and boards on startup
+async function loadRooms() {
+  try {
+    await fs.mkdir(ROOMS_DIR, { recursive: true });
+    const files = await fs.readdir(ROOMS_DIR);
+    for (const file of files) {
+      if (!file.endsWith(".json")) continue;
+      const roomId = file.replace(".json", "");
+      const board = await loadBoard(roomId);
+      rooms[roomId] = { title: `Room ${roomId}`, board };
     }
-    board = [];
+  } catch (err) {
+    console.error("Failed to load rooms:", err);
   }
 }
-
-async function saveBoard() {
-  try {
-    await fs.writeFile(DATA_FILE + ".tmp", JSON.stringify(board, null, 2));
-    await fs.rename(DATA_FILE + ".tmp", DATA_FILE); // atomic swap
-  } catch (err) {
-    console.error("Failed to save board:", err);
-  }
-}
-
-const mutateBoard = (fn) => {
-  try {
-    board = fn(board);
-    console.log("board", board);
-    io.emit("board:update", { board, clientCount });
-    saveBoard();
-  } catch (err) {
-    console.error("mutateBoard error:", err);
-  }
-};
 
 io.on("connection", (socket) => {
-  console.log("=== SERVER STARTED ===");
+  // clientCount++;
 
+  socket.emit("room:list", getRoomList());
   socket.emit("server:status", "online");
+  socket.on("room:create", async ({ id, title }, ack) => {
+    if (rooms[id]) return ack?.({ ok: false, error: "Room already exists" });
 
-  clientCount++;
-  io.emit("client:count", clientCount);
-  console.log(`Client connected (${clientCount} online)`);
-  socket.emit("board:update", { board, clientCount }); // full state on join
-
-  socket.on("disconnect", () => {
-    clientCount--;
-    io.emit("client:count", clientCount);
-    socket.emit("board:update", { board, clientCount });
-    console.log(`Client disconnected (${clientCount} online)`);
-  });
-
-  /* ---------- columns ---------- */
-  socket.on("column:add", (col, ack) => {
-    mutateBoard((b) => [...b, col]);
-
-    // tell every *other* client what happened
-    // socket.broadcast.emit("column:add", col);
+    const board = [];
+    rooms[id] = { title, board };
+    await saveBoard(id, board);
+    io.emit("room:list", getRoomList());
     ack?.({ ok: true });
   });
 
-  socket.on("column:move", ({ sourceIdx, destIdx }) => {
-    mutateBoard((b) => {
-      const copy = [...b];
-      const [moved] = copy.splice(sourceIdx, 1);
-      copy.splice(destIdx, 0, moved);
-      return copy;
-    });
-    // socket.broadcast.emit("column:move", { sourceIdx, destIdx });
+  socket.on("room:list", () => {
+    socket.emit("room:list", getRoomList());
   });
 
-  /* ---------- cards ---------- */
+  socket.on("room:join", async ({ id }, ack) => {
+    if (!rooms[id]) return ack?.({ ok: false, error: "Room not found" });
+
+    socket.join(id);
+    socket.data.roomId = id;
+    const board = rooms[id].board;
+    socket.emit("board:update", { board });
+    ack?.({ ok: true });
+  });
+
+  // === Board Actions per Room ===
+
+  socket.on("column:add", (col) => {
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
+
+    const board = rooms[roomId].board;
+    board.push(col);
+    saveBoard(roomId, board);
+    io.to(roomId).emit("board:update", { board });
+  });
+
+  socket.on("column:move", ({ sourceIdx, destIdx }) => {
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
+
+    const board = rooms[roomId].board;
+    const [moved] = board.splice(sourceIdx, 1);
+    board.splice(destIdx, 0, moved);
+    saveBoard(roomId, board);
+    io.to(roomId).emit("board:update", { board });
+  });
+
   socket.on("card:add", ({ columnId, card }) => {
-    const newCard = {
-      ...card,
-      createdAt: new Date().toISOString(),
-    };
-    mutateBoard((b) =>
-      b.map((c) =>
-        c.id === columnId ? { ...c, cards: [...c.cards, newCard] } : c
-      )
-    );
-    // socket.broadcast.emit("card:add", { columnId, card });
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
+
+    const board = rooms[roomId].board;
+    const column = board.find((c) => c.id === columnId);
+    column.cards.push({ ...card, createdAt: new Date().toISOString() });
+    saveBoard(roomId, board);
+    io.to(roomId).emit("board:update", { board });
   });
 
   socket.on("card:update", ({ columnId, cardId, changes }) => {
-    const newChanges = {
-      ...changes,
-      createdAt: new Date().toISOString(),
-    };
-    mutateBoard((b) =>
-      b.map((c) =>
-        c.id === columnId
-          ? {
-              ...c,
-              cards: c.cards.map((card) =>
-                card.id === cardId ? { ...card, ...newChanges } : card
-              ),
-            }
-          : c
-      )
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
+
+    const board = rooms[roomId].board;
+    const column = board.find((c) => c.id === columnId);
+    column.cards = column.cards.map((card) =>
+      card.id === cardId ? { ...card, ...changes } : card
     );
-    // socket.broadcast.emit("card:update", { columnId, cardId, changes });
+    saveBoard(roomId, board);
+    io.to(roomId).emit("board:update", { board });
   });
 
   socket.on("card:delete", ({ columnId, cardId }) => {
-    mutateBoard((b) =>
-      b.map((col) =>
-        col.id === columnId
-          ? {
-              ...col,
-              cards: col.cards.filter((card) => card.id !== cardId),
-            }
-          : col
-      )
-    );
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
 
-    io.emit("card:delete", { columnId, cardId });
+    const board = rooms[roomId].board;
+    const column = board.find((c) => c.id === columnId);
+    column.cards = column.cards.filter((card) => card.id !== cardId);
+    saveBoard(roomId, board);
+    io.to(roomId).emit("board:update", { board });
   });
 
   socket.on("card:move", ({ sourceCol, destCol, sourceIdx, destIdx }) => {
-    mutateBoard((b) => {
-      const copy = structuredClone(b); // deep copy
-      const source = copy.find((c) => c.id === sourceCol);
-      const [moved] = source.cards.splice(sourceIdx, 1);
-      const dest = copy.find((c) => c.id === destCol);
-      dest.cards.splice(destIdx, 0, moved);
-      return copy;
-    });
-    // socket.broadcast.emit("card:move", {
-    //   sourceCol,
-    //   destCol,
-    //   sourceIdx,
-    //   destIdx,
-    // });
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
+
+    const board = rooms[roomId].board;
+    const source = board.find((c) => c.id === sourceCol);
+    const [moved] = source.cards.splice(sourceIdx, 1);
+    const dest = board.find((c) => c.id === destCol);
+    dest.cards.splice(destIdx, 0, moved);
+    saveBoard(roomId, board);
+    io.to(roomId).emit("board:update", { board });
   });
 });
 
-loadBoard().then(() => {
-  http.listen(4000, () => console.log("Socket.IO on 4000"));
+function getRoomList() {
+  return Object.entries(rooms).map(([id, { title }]) => ({ id, title }));
+}
+
+loadRooms().then(() => {
+  http.listen(4000, () => console.log("Socket.IO with rooms running on 4000"));
 });

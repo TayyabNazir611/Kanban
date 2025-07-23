@@ -7,7 +7,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { CircleAlert, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useBoard } from "../context/BoardContext";
 import ServerOffline from "./ServerOffline";
 
