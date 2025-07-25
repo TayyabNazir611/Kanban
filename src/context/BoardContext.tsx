@@ -55,7 +55,7 @@ interface Ctx {
 const BoardContext = createContext<Ctx | undefined>(undefined);
 
 export function BoardProvider({ children }: { children: React.ReactNode }) {
-  const socket = useSocket("ws://localhost:4000");
+  const socket = useSocket("ws://kanban-gamma-five.vercel.app/");
 
   const [board, setBoard] = useState<BoardState>([]);
   const [connected, setConnected] = useState(0);
